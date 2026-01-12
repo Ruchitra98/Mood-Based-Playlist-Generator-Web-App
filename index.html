@@ -1,369 +1,1219 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mood-Based Playlist Generator</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mood-Based Playlist Generator (Advanced)</title>
   <style>
-   /* General Styles */
+    :root{
+      --bg1:#ffcccb;
+      --bg2:#ffffff;
+      --card: rgba(255,255,255,0.14);
+      --card2: rgba(255,255,255,0.22);
+      --border: rgba(255,255,255,0.20);
+      --shadow: 0 10px 30px rgba(0,0,0,0.12);
+      --text:#1f1f1f;
+      --muted:#4b4b4b;
+      --primary:#6c5ce7;
+      --primary2:#5a4fcf;
+      --danger:#ff4757;
+      --danger2:#ff6b81;
+      --link:#0b57d0;
+      --focus: #111;
+    }
+
+    body.dark{
+      --bg1:#0b1020;
+      --bg2:#0b1020;
+      --card: rgba(255,255,255,0.08);
+      --card2: rgba(255,255,255,0.12);
+      --border: rgba(255,255,255,0.14);
+      --shadow: 0 10px 30px rgba(0,0,0,0.40);
+      --text:#f2f2f2;
+      --muted:#c9c9c9;
+      --primary:#8f84ff;
+      --primary2:#7a6fff;
+      --danger:#ff5b6b;
+      --danger2:#ff7e8a;
+      --link:#8ab4f8;
+      --focus:#fff;
+    }
+
+    * { box-sizing: border-box; }
     body {
-      font-family: "STsong";
-      background: linear-gradient(135deg, #ffcccb, #ffffff); 
-      color: #333;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      background: linear-gradient(135deg, var(--bg1), var(--bg2));
+      color: var(--text);
       margin: 0;
-      padding: 0;
+      padding: 24px 14px;
       display: flex;
       justify-content: center;
-      align-items: center;
       min-height: 100vh;
       flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .skip-link {
+      position:absolute; left:-999px; top:auto; width:1px; height:1px; overflow:hidden;
+    }
+    .skip-link:focus {
+      position: static; width:auto; height:auto;
+      background: var(--card2);
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      outline: 2px solid var(--focus);
+      outline-offset: 2px;
     }
 
     .container {
-      background: rgba(255, 255, 255, 0.1);
+      width: 100%;
+      max-width: 940px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    @media (min-width: 900px) {
+      .container { grid-template-columns: 1.1fr 0.9fr; }
+    }
+
+    .card {
+      background: var(--card);
       backdrop-filter: blur(10px);
-      border-radius: 15px;
-      padding: 2rem;
-      width: 90%;
-      max-width: 500px;
-      text-align: center;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+    }
+
+    .header {
+      display:flex;
+      align-items:flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
     }
 
     h1 {
-      margin-bottom: 1.5rem;
-      font-size: 2rem;
-      font-weight: 600;
-      color: #333;
-    }
-
-    textarea {
-      width: 100%;
-      height: 100px;
-      padding: 10px;
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      border-radius: 10px;
-      margin-bottom: 1rem;
-      font-size: 16px;
-      background: rgba(255, 255, 255, 0.1);
-      color: #333;
-      resize: none;
-      transition: border-color 0.3s ease;
-    }
-
-    textarea::placeholder {
-      color: rgba(255, 255, 255, 0.7);
-    }
-
-    textarea:focus {
-      outline: none;
-      border-color: #6c5ce7;
-    }
-
-    button {
-      background-color: #6c5ce7;
-      color: #333;
-      border: none;
-      padding: 12px 24px;
-      border-radius: 10px;
-      cursor: pointer;
-      font-size: 16px;
-      font-weight: 500;
-      transition: background-color 0.3s ease, transform 0.2s ease;
-    }
-
-    button:hover {
-      background-color: #5a4fcf;
-      transform: translateY(-2px);
-    }
-
-    button:active {
-      transform: translateY(0);
-    }
-
-    .playlist {
-      margin-top: 2rem;
-      text-align: left;
-    }
-
-    .playlist h2 {
-      margin-bottom: 1rem;
-      font-size: 1.5rem;
-      font-weight: 600;
-      color: #333;
-    }
-
-    .playlist-item {
-      display: flex;
-      align-items: center;
-      margin-bottom: 1rem;
-      padding: 10px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 10px;
-      transition: transform 0.3s ease, background 0.3s ease;
-    }
-
-    .playlist-item:hover {
-      background: rgba(255, 255, 255, 0.2);
-      transform: translateX(10px);
-    }
-
-    .playlist-item img {
-      width: 50px;
-      height: 50px;
-      border-radius: 5px;
-      margin-right: 1rem;
-    }
-
-    .playlist-item p {
       margin: 0;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+    .subtitle {
+      margin: 6px 0 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .top-actions{
+      display:flex;
+      gap: 10px;
+      align-items:center;
+    }
+
+    .toggle {
+      display:inline-flex;
+      gap: 8px;
+      align-items:center;
+      font-size: 13px;
+      color: var(--muted);
+      user-select: none;
+      cursor: pointer;
+      padding: 8px 10px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--card2);
+    }
+    .toggle input { accent-color: var(--primary); }
+
+    label { font-size: 13px; color: var(--muted); display:block; margin-bottom: 6px; }
+    textarea, input[type="text"], select {
+      width: 100%;
+      padding: 12px 12px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
       font-size: 14px;
-      color: #333;
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+      outline: none;
     }
 
-    .playlist-item a {
-      display: inline-flex;
-      align-items: center;
-      background-color: #ff0000; /* YouTube red */
-      color: #333;
-      padding: 8px 12px;
-      border-radius: 5px;
-      text-decoration: none;
-      font-weight: 500;
-      transition: background-color 0.3s ease, transform 0.2s ease;
+    textarea { min-height: 96px; resize: vertical; }
+    textarea::placeholder { color: rgba(120,120,120,0.9); }
+    body.dark textarea::placeholder { color: rgba(200,200,200,0.75); }
+
+    textarea:focus, input:focus, select:focus, button:focus, a:focus {
+      outline: 2px solid var(--focus);
+      outline-offset: 2px;
     }
 
-    .playlist-item a:hover {
-      background-color: #cc0000; /* Darker red on hover */
-      transform: translateY(-2px);
+    .row { display:grid; grid-template-columns: 1fr; gap: 12px; }
+    @media (min-width: 520px) {
+      .row.two { grid-template-columns: 1fr 1fr; }
     }
 
-    .playlist-item a:active {
-      transform: translateY(0);
+    .chips {
+      display:flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .chip {
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+      padding: 8px 10px;
+      border-radius: 999px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: transform .12s ease, background .2s ease;
+      user-select:none;
+    }
+    .chip:hover { transform: translateY(-1px); background: var(--card2); }
+    .chip[aria-pressed="true"]{
+      border-color: rgba(255,255,255,0.35);
+      background: rgba(108,92,231,0.18);
     }
 
-    .playlist-item a i {
-      margin-right: 8px;
+    .slider-wrap {
+      display:flex;
+      gap: 12px;
+      align-items:center;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.06);
+    }
+    input[type="range"] { width: 100%; }
+    .pill {
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--card2);
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
     }
 
-    .saved-moods {
-      margin-top: 2rem;
-      text-align: left;
-    }
-
-    .saved-moods h2 {
-      margin-bottom: 1rem;
-      font-size: 1.5rem;
+    .btn {
+      background-color: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 12px 14px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 14px;
       font-weight: 600;
-      color: #333;
+      transition: background-color 0.2s ease, transform 0.12s ease;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap: 8px;
+    }
+    .btn:hover { background-color: var(--primary2); transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+    .btn.secondary{
+      background: rgba(255,255,255,0.10);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-weight: 600;
+    }
+    .btn.secondary:hover{
+      background: var(--card2);
+    }
+    .btn.danger{
+      background: var(--danger);
+    }
+    .btn.danger:hover{
+      background: var(--danger2);
     }
 
-    .saved-moods ul {
+    .actions{
+      display:flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .status{
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.06);
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .status.error{
+      border-color: rgba(255,71,87,0.35);
+      background: rgba(255,71,87,0.10);
+      color: var(--text);
+    }
+    .status.ok{
+      border-color: rgba(76,175,80,0.35);
+      background: rgba(76,175,80,0.10);
+      color: var(--text);
+    }
+
+    .section-title{
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 10px;
+      margin: 0 0 10px 0;
+    }
+    h2{
+      margin: 0;
+      font-size: 16px;
+      font-weight: 750;
+    }
+    .small{
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .playlist-item{
+      display:flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.06);
+      margin-bottom: 10px;
+      transition: transform .12s ease, background .2s ease;
+    }
+    .playlist-item:hover{
+      transform: translateX(4px);
+      background: var(--card2);
+    }
+
+    .playlist-meta{
+      display:flex;
+      flex-direction: column;
+      gap: 3px;
+      min-width: 0;
+    }
+    .playlist-meta strong{
+      font-size: 14px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .playlist-meta span{
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .yt{
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+      background: #ff0000;
+      color: #fff;
+      padding: 9px 10px;
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 12px;
+      flex: 0 0 auto;
+    }
+    .yt:hover{ filter: brightness(0.92); transform: translateY(-1px); }
+    .yt:active{ transform: translateY(0); }
+
+    .saved-list{
       list-style: none;
       padding: 0;
+      margin: 0;
+      display:flex;
+      flex-direction: column;
+      gap: 10px;
     }
-
-    .saved-moods li {
-      display: flex;
+    .saved-item{
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.06);
+      display:flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .saved-top{
+      display:flex;
       justify-content: space-between;
-      align-items: center;
-      padding: 10px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 10px;
-      margin-bottom: 0.5rem;
-      transition: transform 0.3s ease, background 0.3s ease;
+      gap: 10px;
+      align-items:flex-start;
     }
-
-    .saved-moods li:hover {
-      background: rgba(255, 255, 255, 0.2);
-      transform: translateX(10px);
+    .saved-title{
+      display:flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
     }
-
-    .saved-moods li button {
-      background: #ff4757;
-      color: #333;
-      border: none;
-      padding: 5px 10px;
-      border-radius: 5px;
-      cursor: pointer;
+    .saved-title strong{ font-size: 14px; }
+    .saved-title span{ font-size: 12px; color: var(--muted); }
+    .tagline{
       font-size: 12px;
-      transition: background 0.3s ease;
+      color: var(--muted);
+      display:flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .tag{
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.06);
+    }
+    .note{
+      font-size: 13px;
+      color: var(--text);
+      border-left: 3px solid rgba(255,255,255,0.25);
+      padding-left: 10px;
+      opacity: 0.95;
     }
 
-    .saved-moods li button:hover {
-      background: #ff6b81;
+    .toolbar{
+      display:flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .toolbar > *{
+      flex: 1 1 180px;
+    }
+
+    .dash{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    @media (min-width: 520px){
+      .dash{ grid-template-columns: 1fr 1fr; }
+    }
+    .metric{
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.06);
+    }
+    .metric .k{ font-size: 12px; color: var(--muted); }
+    .metric .v{ font-size: 20px; font-weight: 800; margin-top: 6px; }
+
+    .bars{
+      margin-top: 8px;
+      display:flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .bar-row{
+      display:grid;
+      grid-template-columns: 92px 1fr 42px;
+      align-items:center;
+      gap: 10px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .bar{
+      height: 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.06);
+      overflow:hidden;
+    }
+    .fill{
+      height:100%;
+      width: 0%;
+      background: rgba(108,92,231,0.55);
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      * { transition: none !important; scroll-behavior: auto !important; }
+      .playlist-item:hover { transform:none; }
+      .chip:hover { transform:none; }
+      .btn:hover { transform:none; }
+      .yt:hover { transform:none; }
     }
   </style>
 </head>
+
 <body>
+  <a class="skip-link" href="#results">Skip to results</a>
+
   <div class="container">
-    <h1>Mood-Based Playlist Generator</h1>
-    <textarea id="moodInput" placeholder="How are you feeling today?"></textarea>
-    <button onclick="analyzeMood()">Generate Playlist</button>
+    <!-- LEFT: Check-in + Playlist -->
+    <section class="card" aria-labelledby="appTitle">
+      <div class="header">
+        <div>
+          <h1 id="appTitle">Mood-Based Playlist Generator</h1>
+          <p class="subtitle">Check in, choose your goal, get a playlist, and track your mood trends over time.</p>
+        </div>
+        <div class="top-actions">
+          <label class="toggle" title="Toggle dark mode">
+            <input id="darkToggle" type="checkbox" aria-label="Toggle dark mode" />
+            Dark mode
+          </label>
+        </div>
+      </div>
 
-    <div class="playlist" id="playlistSection" style="display: none;">
-      <h2>Your Playlist</h2>
-      <div id="playlist"></div>
-    </div>
+      <div class="row">
+        <div>
+          <label for="moodInput">How are you feeling today?</label>
+          <textarea id="moodInput" placeholder="Example: I'm stressed about exams but also a little hopeful."></textarea>
+          <div class="small" style="margin-top:6px;">
+            Tip: Type naturally — we’ll suggest a mood, but you can override it.
+          </div>
+        </div>
 
-    <!-- Display saved moods -->
-    <div class="saved-moods" id="savedMoodsSection" style="display: none;">
-      <h2>Saved Moods</h2>
-      <ul id="savedMoodsList"></ul>
-    </div>
+        <div class="row two">
+          <div>
+            <div class="section-title">
+              <h2 style="font-size:14px;">Mood</h2>
+              <span class="small">Tap to override</span>
+            </div>
+            <div class="chips" id="moodChips" role="group" aria-label="Select a mood">
+              <!-- chips injected -->
+            </div>
+          </div>
+
+          <div>
+            <div class="section-title">
+              <h2 style="font-size:14px;">Intensity</h2>
+              <span class="small" id="intensityLabel">3 / 5</span>
+            </div>
+            <div class="slider-wrap">
+              <input id="intensity" type="range" min="1" max="5" value="3" aria-label="Mood intensity" />
+              <span class="pill" id="intensityPill">Medium</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="row two">
+          <div>
+            <label for="goalSelect">What do you want right now?</label>
+            <select id="goalSelect" aria-label="Playlist goal">
+              <option value="match">Match my mood</option>
+              <option value="uplift">Help me feel better</option>
+              <option value="calm">Help me calm down</option>
+              <option value="focus">Help me focus</option>
+              <option value="energize">Boost my energy</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="tagsInput">Tags (comma-separated)</label>
+            <input id="tagsInput" type="text" placeholder="work, study, family, relationship" aria-label="Tags" />
+          </div>
+        </div>
+
+        <div>
+          <label for="noteInput">Reflection (optional)</label>
+          <input id="noteInput" type="text" placeholder="One line: what’s on your mind?" aria-label="Reflection note" />
+        </div>
+
+        <div class="actions">
+          <button class="btn" id="generateBtn" type="button">Generate Playlist</button>
+          <button class="btn secondary" id="saveOnlyBtn" type="button" title="Save without generating a playlist">Save Check-in</button>
+          <button class="btn secondary" id="clearBtn" type="button">Clear</button>
+        </div>
+
+        <div id="status" class="status" role="status" aria-live="polite" style="display:none;"></div>
+
+      </div>
+
+      <div id="results" style="margin-top:14px;">
+        <div class="section-title">
+          <h2>Your Playlist</h2>
+          <span class="small" id="playlistHint">Generate to see results</span>
+        </div>
+        <div id="playlist"></div>
+      </div>
+    </section>
+
+    <!-- RIGHT: Dashboard + Saved moods -->
+    <aside class="card">
+      <div class="section-title">
+        <h2>Insights</h2>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <select id="rangeSelect" aria-label="Insights time range" style="max-width:160px;">
+            <option value="7">Last 7 days</option>
+            <option value="30">Last 30 days</option>
+            <option value="all">All time</option>
+          </select>
+          <button class="btn secondary" id="exportBtn" type="button">Export CSV</button>
+        </div>
+      </div>
+
+      <div class="dash" id="dashboard">
+        <!-- metrics injected -->
+      </div>
+
+      <hr style="border:none;border-top:1px solid var(--border); margin: 14px 0;" />
+
+      <div class="section-title">
+        <h2>Saved Check-ins</h2>
+        <span class="small" id="savedCount">0</span>
+      </div>
+
+      <div class="toolbar">
+        <input id="searchInput" type="text" placeholder="Search (mood, tags, note)" aria-label="Search saved entries" />
+        <select id="filterMood" aria-label="Filter by mood">
+          <option value="">All moods</option>
+        </select>
+      </div>
+
+      <ul class="saved-list" id="savedList"></ul>
+
+      <div class="actions" style="margin-top:12px;">
+        <button class="btn danger" id="clearAllBtn" type="button">Clear All</button>
+      </div>
+    </aside>
   </div>
 
   <script>
-    // Function to analyze mood and generate playlist
-    function analyzeMood() {
-      const moodInput = document.getElementById('moodInput').value;
-      if (!moodInput.trim()) {
-        alert('Please describe your mood!');
+    // -----------------------------
+    // Data + Config
+    // -----------------------------
+    const MOODS = ["happy","sad","angry","calm","energetic","romantic","nostalgic","focused","stressed"];
+    const STORAGE_KEY = "advancedMoodCheckins_v1";
+
+    const moodKeywords = {
+      happy: ['happy', 'joyful', 'excited', 'cheerful', 'great', 'good'],
+      sad: ['sad', 'depressed', 'unhappy', 'heartbroken', 'down', 'lonely'],
+      angry: ['angry', 'frustrated', 'annoyed', 'irritated', 'mad'],
+      calm: ['calm', 'peaceful', 'relaxed', 'serene', 'chill'],
+      energetic: ['energetic', 'pumped', 'active', 'lively', 'hyped'],
+      romantic: ['romantic', 'loving', 'affectionate', 'passionate', 'crush'],
+      nostalgic: ['nostalgic', 'sentimental', 'wistful', 'melancholic', 'miss'],
+      focused: ['focused', 'determined', 'motivated', 'productive', 'study'],
+      stressed: ['stressed', 'anxious', 'overwhelmed', 'nervous', 'panic']
+    };
+
+    // Base playlists by mood
+    const playlistsByMood = {
+      happy: [
+        { title: 'Uptown Funk', artist: 'Mark Ronson ft. Bruno Mars', videoId: 'OPf0YbXqDm0' },
+        { title: 'Can\'t Stop the Feeling!', artist: 'Justin Timberlake', videoId: 'ru0K8uYEZWw' },
+      ],
+      sad: [
+        { title: 'Someone Like You', artist: 'Adele', videoId: 'hLQl3WQQoQ0' },
+        { title: 'Fix You', artist: 'Coldplay', videoId: 'k4V3Mo61fJM' },
+      ],
+      angry: [
+        { title: 'Break Stuff', artist: 'Limp Bizkit', videoId: 'ZpUYjpKg9KY' },
+        { title: 'Boulevard of Broken Dreams', artist: 'Green Day', videoId: 'Soa3gO7tL-c' },
+      ],
+      calm: [
+        { title: 'Weightless', artist: 'Marconi Union', videoId: 'UfcAVejslrU' },
+        { title: 'Clair de Lune', artist: 'Claude Debussy', videoId: 'CvFH_6DNRCY' },
+      ],
+      energetic: [
+        { title: 'Eye of the Tiger', artist: 'Survivor', videoId: 'btPJPFnesV4' },
+        { title: 'Lose Yourself', artist: 'Eminem', videoId: '_Yhyp-_hX2s' },
+      ],
+      romantic: [
+        { title: 'Thinking Out Loud', artist: 'Ed Sheeran', videoId: 'lp-EO5I60KA' },
+        { title: 'All of Me', artist: 'John Legend', videoId: '450p7goxZqg' },
+      ],
+      nostalgic: [
+        { title: 'Bohemian Rhapsody', artist: 'Queen', videoId: 'fJ9rUzIMcZQ' },
+        { title: 'Hotel California', artist: 'Eagles', videoId: 'BciS5krYL80' },
+      ],
+      focused: [
+        { title: 'River Flows in You', artist: 'Yiruma', videoId: '7maJOI3QMu0' },
+        { title: 'Weightless', artist: 'Marconi Union', videoId: 'UfcAVejslrU' },
+      ],
+      stressed: [
+        { title: 'Breathe Me', artist: 'Sia', videoId: 'ghPcYqn0p4Y' },
+        { title: 'Holocene', artist: 'Bon Iver', videoId: 'TWcyIpul8OE' },
+      ],
+    };
+
+    // Goal-based mapping (mood + goal => target mood)
+    // "match" means keep the detected/selected mood.
+    const goalToTargetMood = (currentMood, goal) => {
+      if (goal === "match") return currentMood;
+      if (goal === "uplift") {
+        // move sad/angry/stressed towards happy/calm
+        if (["sad","stressed"].includes(currentMood)) return "happy";
+        if (currentMood === "angry") return "calm";
+        return "happy";
+      }
+      if (goal === "calm") {
+        if (["angry","energetic","stressed"].includes(currentMood)) return "calm";
+        return "calm";
+      }
+      if (goal === "focus") return "focused";
+      if (goal === "energize") return "energetic";
+      return currentMood;
+    };
+
+    // Intensity label
+    function intensityText(v){
+      const n = Number(v);
+      if (n <= 1) return "Very low";
+      if (n === 2) return "Low";
+      if (n === 3) return "Medium";
+      if (n === 4) return "High";
+      return "Very high";
+    }
+
+    // -----------------------------
+    // Helpers
+    // -----------------------------
+    function $(id){ return document.getElementById(id); }
+
+    function showStatus(msg, type=""){
+      const el = $("status");
+      el.textContent = msg;
+      el.className = "status" + (type ? ` ${type}` : "");
+      el.style.display = "block";
+    }
+    function hideStatus(){
+      $("status").style.display = "none";
+    }
+
+    function nowISO(){ return new Date().toISOString(); }
+    function toLocal(ts){
+      try { return new Date(ts).toLocaleString(); } catch { return ts; }
+    }
+
+    function loadEntries(){
+      try{
+        return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+      }catch(e){
+        return [];
+      }
+    }
+    function saveEntries(entries){
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+    }
+
+    function analyzeMoodText(text){
+      const t = (text || "").toLowerCase();
+      for (const [mood, keys] of Object.entries(moodKeywords)){
+        if (keys.some(k => t.includes(k))) return mood;
+      }
+      return "calm";
+    }
+
+    // Basic shuffling to vary playlists a bit
+    function shuffle(arr){
+      const a = [...arr];
+      for (let i=a.length-1;i>0;i--){
+        const j = Math.floor(Math.random()*(i+1));
+        [a[i],a[j]] = [a[j],a[i]];
+      }
+      return a;
+    }
+
+    function generatePlaylist(currentMood, goal, intensity){
+      const targetMood = goalToTargetMood(currentMood, goal);
+      const base = playlistsByMood[targetMood] || [];
+
+      // Intensity tweak: if very high intensity, add one extra from energetic/focused
+      // (still simple but shows product logic)
+      const extraPool = intensity >= 4 ? (playlistsByMood.energetic || []).concat(playlistsByMood.focused || []) : [];
+      const extras = intensity >= 4 ? shuffle(extraPool).slice(0,1) : [];
+
+      // Return 2–3 items (demo)
+      return shuffle(base).slice(0,2).concat(extras);
+    }
+
+    function parseTags(str){
+      return (str || "")
+        .split(",")
+        .map(s => s.trim())
+        .filter(Boolean)
+        .slice(0, 8);
+    }
+
+    function setSelectedMood(mood){
+      state.selectedMood = mood;
+      updateChipUI();
+    }
+
+    function updateChipUI(){
+      const chips = $("moodChips").querySelectorAll(".chip");
+      chips.forEach(btn => {
+        const m = btn.getAttribute("data-mood");
+        btn.setAttribute("aria-pressed", String(m === state.selectedMood));
+      });
+    }
+
+    function renderChips(){
+      const wrap = $("moodChips");
+      wrap.innerHTML = "";
+      MOODS.forEach(m => {
+        const b = document.createElement("button");
+        b.className = "chip";
+        b.type = "button";
+        b.textContent = m;
+        b.setAttribute("data-mood", m);
+        b.setAttribute("aria-pressed", "false");
+        b.addEventListener("click", () => {
+          setSelectedMood(m);
+          hideStatus();
+        });
+        wrap.appendChild(b);
+      });
+      updateChipUI();
+    }
+
+    function renderPlaylist(list, contextText){
+      const div = $("playlist");
+      div.innerHTML = "";
+
+      $("playlistHint").textContent = contextText || "";
+
+      if (!list || list.length === 0){
+        div.innerHTML = `<div class="status">No songs found for this mood/goal yet.</div>`;
         return;
       }
 
-      const mood = analyzeMoodText(moodInput);
-      const playlist = generatePlaylist(mood);
-      displayPlaylist(playlist);
-
-      // Save the mood to localStorage
-      saveMood(mood);
-    }
-
-    // Function to analyze mood text
-    function analyzeMoodText(text) {
-      const moodKeywords = {
-        happy: ['happy', 'joyful', 'excited', 'cheerful'],
-        sad: ['sad', 'depressed', 'unhappy', 'heartbroken'],
-        angry: ['angry', 'frustrated', 'annoyed', 'irritated'],
-        calm: ['calm', 'peaceful', 'relaxed', 'serene'],
-        energetic: ['energetic', 'pumped', 'active', 'lively'],
-        romantic: ['romantic', 'loving', 'affectionate', 'passionate'],
-        nostalgic: ['nostalgic', 'sentimental', 'wistful', 'melancholic'],
-        focused: ['focused', 'determined', 'motivated', 'productive'],
-      };
-
-      for (const [mood, keywords] of Object.entries(moodKeywords)) {
-        if (keywords.some(keyword => text.toLowerCase().includes(keyword))) {
-          return mood;
-        }
-      }
-      return 'calm'; // Default mood
-    }
-
-    // Function to generate playlist based on mood
-    function generatePlaylist(mood) {
-      const playlists = {
-        happy: [
-          { title: 'Uptown Funk', artist: 'Mark Ronson ft. Bruno Mars', videoId: 'OPf0YbXqDm0' },
-          { title: 'Can\'t Stop the Feeling!', artist: 'Justin Timberlake', videoId: 'ru0K8uYEZWw' },
-        ],
-        sad: [
-          { title: 'Someone Like You', artist: 'Adele', videoId: 'hLQl3WQQoQ0' },
-          { title: 'Fix You', artist: 'Coldplay', videoId: 'k4V3Mo61fJM' },
-        ],
-        angry: [
-          { title: 'Break Stuff', artist: 'Limp Bizkit', videoId: 'ZpUYjpKg9KY' },
-          { title: 'Boulevard of Broken Dreams', artist: 'Green Day', videoId: 'Soa3gO7tL-c' },
-        ],
-        calm: [
-          { title: 'Weightless', artist: 'Marconi Union', videoId: 'UfcAVejslrU' },
-          { title: 'Clair de Lune', artist: 'Claude Debussy', videoId: 'CvFH_6DNRCY' },
-        ],
-        energetic: [
-          { title: 'Eye of the Tiger', artist: 'Survivor', videoId: 'btPJPFnesV4' },
-          { title: 'Lose Yourself', artist: 'Eminem', videoId: '_Yhyp-_hX2s' },
-        ],
-        romantic: [
-          { title: 'Thinking Out Loud', artist: 'Ed Sheeran', videoId: 'lp-EO5I60KA' },
-          { title: 'All of Me', artist: 'John Legend', videoId: '450p7goxZqg' },
-        ],
-        nostalgic: [
-          { title: 'Bohemian Rhapsody', artist: 'Queen', videoId: 'fJ9rUzIMcZQ' },
-          { title: 'Hotel California', artist: 'Eagles', videoId: 'BciS5krYL80' },
-        ],
-        focused: [
-          { title: 'River Flows in You', artist: 'Yiruma', videoId: '7maJOI3QMu0' },
-          { title: 'Weightless', artist: 'Marconi Union', videoId: 'UfcAVejslrU' },
-        ],
-      };
-      return playlists[mood] || [];
-    }
-
-    // Function to display playlist
-    function displayPlaylist(playlist) {
-      const playlistSection = document.getElementById('playlistSection');
-      const playlistDiv = document.getElementById('playlist');
-      playlistDiv.innerHTML = '';
-
-      if (playlist.length === 0) {
-        playlistDiv.innerHTML = '<p>No songs found for your mood.</p>';
-        playlistSection.style.display = 'block';
-        return;
-      }
-
-      playlist.forEach(song => {
-        const songItem = document.createElement('div');
-        songItem.className = 'playlist-item';
-        songItem.innerHTML = `
-          <p>
-            <strong>${song.title}</strong><br>
-            ${song.artist}<br>
-            <a href="https://www.youtube.com/watch?v=${song.videoId}" target="_blank">Play on YouTube</a>
-          </p>
+      list.forEach(song => {
+        const item = document.createElement("div");
+        item.className = "playlist-item";
+        item.innerHTML = `
+          <div class="playlist-meta">
+            <strong title="${escapeHtml(song.title)}">${escapeHtml(song.title)}</strong>
+            <span title="${escapeHtml(song.artist)}">${escapeHtml(song.artist)}</span>
+          </div>
+          <a class="yt" href="https://www.youtube.com/watch?v=${encodeURIComponent(song.videoId)}" target="_blank" rel="noopener noreferrer">
+            ▶ Play
+          </a>
         `;
-        playlistDiv.appendChild(songItem);
+        div.appendChild(item);
+      });
+    }
+
+    function escapeHtml(s){
+      return String(s)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    function saveCheckin({ mood, intensity, goal, note, tags, rawText }){
+      const entries = loadEntries();
+      entries.unshift({
+        id: crypto?.randomUUID ? crypto.randomUUID() : String(Date.now()) + "_" + Math.random().toString(16).slice(2),
+        mood,
+        intensity,
+        goal,
+        note: note || "",
+        tags: tags || [],
+        rawText: rawText || "",
+        ts: nowISO(),
+      });
+      saveEntries(entries);
+      return entries;
+    }
+
+    function deleteEntry(id){
+      const entries = loadEntries().filter(e => e.id !== id);
+      saveEntries(entries);
+      return entries;
+    }
+
+    function clearAll(){
+      localStorage.removeItem(STORAGE_KEY);
+    }
+
+    // Filter entries by time range
+    function entriesInRange(entries, range){
+      if (range === "all") return entries;
+      const days = Number(range);
+      const cutoff = Date.now() - (days * 24 * 60 * 60 * 1000);
+      return entries.filter(e => {
+        const t = new Date(e.ts).getTime();
+        return Number.isFinite(t) && t >= cutoff;
+      });
+    }
+
+    function computeInsights(entries){
+      const total = entries.length;
+      const moodCounts = {};
+      let avgIntensity = 0;
+
+      entries.forEach(e => {
+        moodCounts[e.mood] = (moodCounts[e.mood] || 0) + 1;
+        avgIntensity += Number(e.intensity || 0);
       });
 
-      playlistSection.style.display = 'block';
-    }
+      avgIntensity = total ? (avgIntensity / total) : 0;
 
-    // Function to save mood to localStorage
-    function saveMood(mood) {
-      let savedMoods = JSON.parse(localStorage.getItem('savedMoods')) || [];
-      savedMoods.push({ mood: mood, timestamp: new Date().toLocaleString() });
-      localStorage.setItem('savedMoods', JSON.stringify(savedMoods));
-
-      // Display saved moods
-      displaySavedMoods();
-    }
-
-    // Function to display saved moods
-    function displaySavedMoods() {
-      const savedMoodsSection = document.getElementById('savedMoodsSection');
-      const savedMoodsList = document.getElementById('savedMoodsList');
-      savedMoodsList.innerHTML = '';
-
-      const savedMoods = JSON.parse(localStorage.getItem('savedMoods')) || [];
-      if (savedMoods.length === 0) {
-        savedMoodsList.innerHTML = '<p>No moods saved yet.</p>';
-      } else {
-        savedMoods.forEach((entry, index) => {
-          const moodItem = document.createElement('li');
-          moodItem.innerHTML = `
-            <strong>${entry.mood}</strong> - ${entry.timestamp}
-            <button onclick="deleteMood(${index})">Delete</button>
-          `;
-          savedMoodsList.appendChild(moodItem);
-        });
+      let topMood = "—";
+      let topMoodCount = 0;
+      for (const [m, c] of Object.entries(moodCounts)){
+        if (c > topMoodCount){
+          topMood = m;
+          topMoodCount = c;
+        }
       }
 
-      savedMoodsSection.style.display = 'block';
+      // "Streak" (simple): consecutive days with at least 1 entry
+      const daysSet = new Set(entries.map(e => new Date(e.ts).toDateString()));
+      const sortedDays = [...daysSet].map(d => new Date(d).getTime()).sort((a,b)=>b-a);
+
+      let streak = 0;
+      if (sortedDays.length){
+        let cursor = sortedDays[0];
+        streak = 1;
+        for (let i=1;i<sortedDays.length;i++){
+          const expected = cursor - 24*60*60*1000;
+          if (Math.abs(sortedDays[i] - expected) < 1000){
+            streak++;
+            cursor = sortedDays[i];
+          } else {
+            break;
+          }
+        }
+      }
+
+      return { total, moodCounts, topMood, topMoodCount, avgIntensity, streak };
     }
 
-    // Function to delete a saved mood
-    function deleteMood(index) {
-      let savedMoods = JSON.parse(localStorage.getItem('savedMoods')) || [];
-      savedMoods.splice(index, 1); // Remove the mood at the specified index
-      localStorage.setItem('savedMoods', JSON.stringify(savedMoods));
+    function renderDashboard(){
+      const all = loadEntries();
+      const range = $("rangeSelect").value;
+      const entries = entriesInRange(all, range);
 
-      // Refresh the displayed moods
-      displaySavedMoods();
+      const dash = $("dashboard");
+      const info = computeInsights(entries);
+
+      dash.innerHTML = `
+        <div class="metric">
+          <div class="k">Check-ins (${range === "all" ? "all time" : "last " + range + " days"})</div>
+          <div class="v">${info.total}</div>
+          <div class="small">Consistency helps you notice patterns.</div>
+        </div>
+
+        <div class="metric">
+          <div class="k">Current streak</div>
+          <div class="v">${info.streak} day${info.streak === 1 ? "" : "s"}</div>
+          <div class="small">One check-in per day counts.</div>
+        </div>
+
+        <div class="metric">
+          <div class="k">Top mood</div>
+          <div class="v">${escapeHtml(info.topMood)}</div>
+          <div class="small">${info.topMood === "—" ? "" : `${info.topMoodCount} time(s)`}</div>
+        </div>
+
+        <div class="metric">
+          <div class="k">Avg intensity</div>
+          <div class="v">${info.total ? info.avgIntensity.toFixed(1) : "—"}</div>
+          <div class="small">${info.total ? "Out of 5" : "No data yet"}</div>
+        </div>
+
+        <div class="metric" style="grid-column: 1 / -1;">
+          <div class="k">Mood breakdown</div>
+          ${renderBars(info.moodCounts, info.total)}
+        </div>
+      `;
     }
 
-    // Display saved moods when the page loads
-    window.onload = displaySavedMoods;
+    function renderBars(moodCounts, total){
+      const moods = MOODS.filter(m => moodCounts[m]).concat(
+        Object.keys(moodCounts).filter(m => !MOODS.includes(m))
+      );
+
+      if (!total){
+        return `<div class="status" style="margin-top:10px;">No check-ins in this range yet.</div>`;
+      }
+
+      const rows = moods.map(m => {
+        const c = moodCounts[m] || 0;
+        const pct = total ? Math.round((c/total)*100) : 0;
+        return `
+          <div class="bar-row">
+            <div>${escapeHtml(m)}</div>
+            <div class="bar"><div class="fill" style="width:${pct}%;"></div></div>
+            <div style="text-align:right;">${pct}%</div>
+          </div>
+        `;
+      }).join("");
+
+      return `<div class="bars">${rows}</div>`;
+    }
+
+    function renderSaved(){
+      const entries = loadEntries();
+      $("savedCount").textContent = String(entries.length);
+
+      // populate filter dropdown
+      const filter = $("filterMood");
+      const current = filter.value;
+      const moodsPresent = [...new Set(entries.map(e => e.mood))].sort();
+      filter.innerHTML = `<option value="">All moods</option>` + moodsPresent.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join("");
+      filter.value = current;
+
+      // apply search + filter
+      const q = $("searchInput").value.trim().toLowerCase();
+      const moodFilter = $("filterMood").value;
+
+      const filtered = entries.filter(e => {
+        const matchMood = moodFilter ? e.mood === moodFilter : true;
+        if (!matchMood) return false;
+
+        if (!q) return true;
+        const blob = [
+          e.mood, e.goal, e.note, e.rawText,
+          ...(e.tags || [])
+        ].join(" ").toLowerCase();
+
+        return blob.includes(q);
+      });
+
+      const ul = $("savedList");
+      ul.innerHTML = "";
+
+      if (!filtered.length){
+        ul.innerHTML = `<div class="status">No saved check-ins match your search/filter.</div>`;
+        return;
+      }
+
+      filtered.slice(0, 30).forEach(e => {
+        const li = document.createElement("li");
+        li.className = "saved-item";
+
+        const tags = (e.tags || []).map(t => `<span class="tag">${escapeHtml(t)}</span>`).join("");
+        const note = e.note ? `<div class="note">${escapeHtml(e.note)}</div>` : "";
+        const raw = e.rawText ? `<div class="small">“${escapeHtml(e.rawText.slice(0,120))}${e.rawText.length > 120 ? "…" : ""}”</div>` : "";
+
+        li.innerHTML = `
+          <div class="saved-top">
+            <div class="saved-title">
+              <strong>${escapeHtml(e.mood)} • ${escapeHtml(e.goal)} • ${escapeHtml(String(e.intensity))}/5</strong>
+              <span>${escapeHtml(toLocal(e.ts))}</span>
+            </div>
+            <button class="btn danger" type="button" style="padding:8px 10px; font-size:12px;" aria-label="Delete entry">Delete</button>
+          </div>
+          ${raw}
+          ${note}
+          ${tags ? `<div class="tagline">${tags}</div>` : ""}
+        `;
+
+        li.querySelector("button").addEventListener("click", () => {
+          deleteEntry(e.id);
+          renderSaved();
+          renderDashboard();
+          showStatus("Deleted one check-in.", "ok");
+        });
+
+        ul.appendChild(li);
+      });
+
+      if (filtered.length > 30){
+        const msg = document.createElement("div");
+        msg.className = "small";
+        msg.style.marginTop = "8px";
+        msg.textContent = `Showing 30 of ${filtered.length}. Refine search to see more.`;
+        ul.appendChild(msg);
+      }
+    }
+
+    function exportCSV(){
+      const entries = loadEntries();
+      if (!entries.length){
+        showStatus("Nothing to export yet.", "error");
+        return;
+      }
+
+      const header = ["timestamp","mood","intensity","goal","tags","note","rawText"];
+      const rows = entries.map(e => {
+        const vals = [
+          e.ts,
+          e.mood,
+          e.intensity,
+          e.goal,
+          (e.tags || []).join("|"),
+          e.note || "",
+          (e.rawText || "").replaceAll("\n"," ").trim()
+        ];
+        return vals.map(csvEscape).join(",");
+      });
+
+      const csv = header.join(",") + "\n" + rows.join("\n");
+      const blob = new Blob([csv], {type:"text/csv;charset=utf-8;"});
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "mood_checkins.csv";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+
+      showStatus("Exported CSV successfully.", "ok");
+    }
+
+    function csvEscape(v){
+      const s = String(v ?? "");
+      if (/[",\n]/.test(s)) return `"${s.replaceAll('"','""')}"`;
+      return s;
+    }
+
+    // -----------------------------
+    // State + Events
+    // -----------------------------
+    const state = {
+      selectedMood: "calm",
+      loading: false,
+    };
+
+    function setLoading(isLoading){
+      state.loading = isLoading;
+      const btn = $("generateBtn");
+      btn.disabled = isLoading;
+      btn.textContent = isLoading ? "Analyzing..." : "Generate Playlist";
+    }
+
+    function syncIntensityUI(){
+      const v = $("intensity").value;
+      $("intensityLabel").textContent = `${v} / 5`;
+      $("intensityPill").textContent = intensityText(v);
+    }
+
+    function autoSuggestMoodFromText(){
+      const text = $("moodInput").value;
+      if (!text.trim()) return;
+      const detected = analyzeMoodText(text);
+      setSelectedMood(detected);
+      showStatus(`Suggested mood: ${detected}. You can change it using the chips.`, "ok");
+    }
+
+    function clearForm(){
+      $("moodInput").value = "";
+      $("tagsInput").value = "";
+      $("noteInput").value = "";
+      $("goalSelect").value = "match";
+      $("intensity").value = "3";
+      syncIntensityUI();
+      setSelectedMood("calm");
+      renderPlaylist([], "Generate to see results");
+      hideStatus();
+    }
+
+    // -----------------------------
+    // Init
+    // -----------------------------
+    function init(){
+      // Dark mode preference
+      const dm = localStorage.getItem("dm_pref") || "";
+      if (dm === "1"){
+        document.body.classList.add("dark");
+        $("darkToggle").checked = true;
+      }
+
+      $("darkToggle").addEventListener("change", (e) => {
+        const on = e.target.checked;
+        document.body.classList.toggle("dark", on);
+        localStorage.setItem("dm_pref", on ? "1" : "0");
+      });
+
+      renderChips();
+      syncIntensityUI();
+
+      $("intensity").addEventListener("input", syncIntensityUI);
+
+      // auto detect mood on blur (gentle)
+      $("moodInput").addEventListener("blur", () => {
+        if ($("moodInput").value.trim()) autoSuggestMoodFromText();
+      });
+
+      $("generateBtn").addEventListener("click", async () => {
+        hideStatus();
+
+        const rawText = $("moodInput").value.trim();
+        if (!rawText){
+          showStatus("Please describe your mood (even 1 sentence).", "error");
+          $("moodInput").focus();
+          return;
+        }
+
+        setLoading(true);
+
+        // Simulated loading for UX (looks real)
+        await new Promise(r => setTimeout(r, 450));
+
+        const mood = state.selectedMood || analyzeMoodText(rawText);
+        const intensity = Number($("intensity").value);
+        const goal = $("goalSelect").value;
+        const tags = parseTags($("tagsInput").value);
+        const note = $("noteInput").value.trim();
+
+        const list = generatePlaylist(mood, goal, intensity);
+        const targetMood = goalToTargetMood(mood, goal);
+        const context = `Mood: ${mood} • Goal: ${goal} → Playlist vibe: ${targetMood}`;
+
+        renderPlaylist(list, context);
+
+        // Save check-in
+        saveCheckin({ mood, intensity, goal, note, tags, rawText });
+        renderSaved();
+        renderDashboard();
+
+        showStatus("Saved your check-in + generated playlist.", "ok");
+
+        setLoading(false);
+      });
+
+      $("saveOnlyBtn").addEventListener("click", () => {
+        hideStatus();
+
+        const rawText = $("moodInput").value.trim();
+        if (!rawText){
+          showStatus("Write 1–2 lines about how you feel, then save.", "error");
+          $("moodInput").focus();
+          return;
+        }
+
+        const mood = state.selectedMood || analyzeMoodText(rawText);
+        const intensity = Number($("intensity").value);
+        const goal = $("goalSelect").value;
+        const tags = parseTags($("tagsInput").value);
+        const note = $("noteInput").value.trim();
+
+        saveCheckin({ mood, intensity, goal, note, tags, rawText });
+        renderSaved();
+        renderDashboard();
+        showStatus("Saved your check-in.", "ok");
+      });
+
+      $("clearBtn").addEventListener("click", clearForm);
+
+      $("searchInput").addEventListener("input", renderSaved);
+      $("filterMood").addEventListener("change", renderSaved);
+      $("rangeSelect").addEventListener("change", renderDashboard);
+
+      $("exportBtn").addEventListener("click", exportCSV);
+
+      $("clearAllBtn").addEventListener("click", () => {
+        clearAll();
+        renderSaved();
+        renderDashboard();
+        renderPlaylist([], "Generate to see results");
+        showStatus("Cleared all saved check-ins.", "ok");
+      });
+
+      renderSaved();
+      renderDashboard();
+      renderPlaylist([], "Generate to see results");
+    }
+
+    init();
   </script>
 </body>
 </html>
